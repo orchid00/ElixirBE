@@ -8,5 +8,8 @@ Feedback report January - March 2018
 
 Paula Andrea Martinez
 
+## License
+[License](license.md)
+
 
 
