@@ -1,0 +1,254 @@
+---
+title: "Elixir Belgium workshop feedback"
+subtitle: "January 2018 - March 2018"
+author: "Paula Andrea Martinez"
+date: "`r Sys.Date()`"
+output:
+  tufte::tufte_html: default
+  tufte::tufte_handout:
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+library(tufte)
+library(tidyverse)
+library(scales)
+library(lubridate)
+# invalidate cache when the tufte version changes
+knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tufte'))
+options(htmltools.dir.version = FALSE)
+```
+
+```{r echo=FALSE, message=FALSE}
+# read in overall data
+overall <- read_tsv("data/overall.tsv")
+total_attendees <- sum(overall$Attendees)
+total_women <- sum(overall$Attendees_Female)
+total_men <- sum(overall$Attendees_Male)
+total_applicants <- sum(overall$Applicants)
+```
+
+# Elixir Belgium workshops
+
+## Introduction
+
+Elixir Belgium Training has the aim to provide tools for data analysis to life 
+scientist from all career stages. In this report we would like to share
+the feedback received from attendees.
+
+## Summary of attendees
+
+From January 2018 to March 2018 we had a total of **`r nrow(overall)`** 
+workshops at different locations around Belgium. 
+On these workshops we received **`r total_attendees`** attendees, from 
+`r total_applicants` applicants. The gender distribution was 
+**`r percent(total_women / total_attendees)` **
+for women and **`r percent(total_men / total_attendees)` ** for men.
+
+Number of workshops by location
+```{r echo = FALSE}
+knitr::kable(
+  table(overall$Location), col.names = c("Location", "Number of workshops")
+)
+```
+
+# Feedback
+
+```{r echo=FALSE, message=FALSE}
+# Read in data
+feedbackall <- read_csv(file = "data/allworkshops_uptomarch.csv", 
+                   na = c(""," ","NA"))
+# Clean names
+names(feedbackall) <- c("Date", "Employment_sector", "Career_stage", "Gender",
+                        "Country_of_employment", "Hear_about_workshop",
+                        "Workshop", "Have_used_resources_before", 
+                        "Will_use_resources_future", "Would_recommend_workshop",
+                        "Overall_satisfaction", "Enjoy", "To_improve", 
+                        "Long_term", "Browser", "IP", "ID", "LatLon"
+                        )
+# Data munging
+clean_feedback <- feedbackall %>% 
+    select(-IP) %>% 
+    mutate(Date = lubridate::ymd_hms(as.character(Date), tz = "CET"),
+           Employment_sector = str_remove(Employment_sector, 
+                                          " \\(University\\)"),
+           Country_of_employment = 
+               str_replace(Country_of_employment, "Other: ", ""),
+           Contact_later = ifelse(is.na(Long_term), "No", "Yes")
+           ) %>% 
+    select(-Long_term ) %>% 
+    separate(Browser, c("Browser", "OS"), sep = " / ") %>% 
+    separate(LatLon, c("Latitude", "Longitude"), sep = ", ") %>% 
+    mutate(Overall_satisfaction = str_remove(
+      feedbackall$Overall_satisfaction, pattern = " *\\(.*")) %>% 
+    separate(Browser, c("Browser"), extra = "drop") %>% 
+    mutate(Latitude = as.double(Latitude), 
+           Longitude = as.double(Longitude))
+```
+
+From the above numbers we had a total of `r nrow(clean_feedback)` 
+responses to the voluntary and annonymous after-workshop feedback. 
+
+```{r echo=FALSE, message=FALSE}
+# customised locations
+locations <- clean_feedback %>% 
+    select(Workshop) %>% 
+    mutate(Locality = str_extract(Workshop, pattern = "\\w+$")) %>% 
+    mutate(Locality = str_remove(Locality, pattern = "(.*)_")) %>%   
+    select(Locality) 
+```
+
+Please notice how much the number of feedback
+responses varies among different locations.
+```{r echo = FALSE}
+knitr::kable(
+  table(locations), col.names = c("Location", "Number of responses")
+)
+```
+
+## Visualising responses
+```{r echo=FALSE, message=FALSE}
+# Setting a custom ggplot2 theme
+theme_clean <- function(){
+  theme_bw() +
+    theme(axis.text.x = element_text(size = 11),
+          axis.text.y = element_text(size = 11),
+          axis.title.x = element_text(size = 11, face = "plain"),             
+          axis.title.y = element_text(size = 11, face = "plain"),             
+          panel.grid.major.x = element_blank(),                                          
+          panel.grid.minor.x = element_blank(),
+          panel.grid.minor.y = element_blank(),
+          panel.grid.major.y = element_blank(),  
+          plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), units = , "cm"),
+          plot.title = element_text(size = 14, vjust = 1, hjust = 0.5),
+          legend.text = element_text(size = 12, face = "italic"),          
+          legend.title = element_blank(),                              
+          legend.position = c(0.5, 0.8))
+}
+```
+
+Comparing the gender distribution of respondents, it is similar to the 
+total gender distribution of the total attendees. 
+```{r echo = FALSE}
+per <- as.data.frame(table(clean_feedback$Gender)/nrow(clean_feedback))
+per$Freq <- round(per$Freq * 100, 2)
+per$Freq <- paste(per$Freq, c("%", "%", "%"))
+knitr::kable(per, col.names = c("Gender", "Percentage of respondents"),
+             align = c("l","r"))
+```
+
+```{r fig.cap = "Gender distribution", message=FALSE, echo=FALSE, fig.height= 2.5}
+library(ggplot2)
+ggplot(data = clean_feedback, mapping = aes(x = Gender)) +
+    geom_bar(fill = "#1B2944", colour = "darkgrey", width = 0.5) +
+    labs(title = "Gender") +
+    expand_limits(y = 40) +
+    coord_flip() +
+    theme_clean()
+```
+
+Our aim is to reach all career stages, however it is clear that most attendees 
+are PhD candidates.
+
+```{r fig.cap = "Career stages", message=FALSE, echo=FALSE, fig.height=4.5}
+car_levels <- c("Undergraduate", "Masters", "PhD candidate",
+                  "Postdoctoral researcher", 
+                   "Senior academic / Principal investigator", 
+                   "Industry scientist", "Other")
+clean_feedback %>% 
+  mutate(career = parse_factor(Career_stage, car_levels)) %>% 
+  ggplot(mapping = aes(x = career)) +
+    geom_bar(fill = "#1B2944", colour = "darkgrey", width = 0.5) +
+    expand_limits(y = 40) +
+    labs(title = "Career stage of respondents",
+         x = "Career stage") +
+    coord_flip() +
+    theme_clean()
+```
+
+## Workshop satisfaction
+
+Overall the workshops are well received.
+
+```{r fig.cap = "Workshop feedback", message=FALSE, echo=FALSE, fig.height=3.5}
+sat_levels <- c("Satisfactory", "Good",
+                  "Very good", "Excellent")
+clean_feedback %>% 
+  mutate(sat = parse_factor(Overall_satisfaction, sat_levels)) %>% 
+  ggplot(mapping = aes(x = sat)) +
+    geom_bar(fill = "#1B2944", colour = "darkgrey", width = 0.5) +
+    expand_limits(y = 40) +
+    labs(title = "Overall satisfaction with the workshop",
+         x = "Feedback responses") +
+    coord_flip() +
+    theme_clean()
+```
+
+We also asked if attendees would recommend the workshop, and most people said 
+yes.
+
+```{r fig.cap = "Recommendations", message=FALSE, echo=FALSE, fig.height=2.5}
+clean_feedback %>% 
+  ggplot(mapping = aes(x = Would_recommend_workshop)) +
+    geom_bar(fill = "#1B2944", colour = "darkgrey", width = 0.5) +
+    labs(title = "Would you recommend the workshop",
+         x = "Recommended") +
+    coord_flip() +
+    theme_clean()
+```
+
+## Extra questions
+
+These workshops are all bring-your-own-device. The distribution of operative
+systems is interesting. Most attendees use Windows computers.
+
+```{r echo = FALSE}
+osatt <- str_extract(clean_feedback$OS, pattern = "\\w+")
+knitr::kable(
+  table(osatt), col.names = c("Operative System", "Number of laptops"),
+  caption = "OS from participants"
+)
+```
+
+The last two questions were only included from the third workshop and have 
+`r sum(!is.na(clean_feedback$Have_used_resources_before))` responses each.
+
+First, we asked if attendees have used the tools or resources before attending the
+workshop. 
+
+```{r echo = FALSE}
+knitr::kable(
+  table(clean_feedback$Have_used_resources_before), 
+  col.names = c("How often have you used the tools before", "Number of responses"),
+  caption = "Have used the tools or resources before"
+)
+```
+
+Then, we asked if attendees will use the tools or resources they have learned 
+after attending the workshop. 
+
+```{r echo = FALSE}
+knitr::kable(
+  table(clean_feedback$Will_use_resources_future), 
+  col.names = c("Will you use the tools or resources in the future", "Number of responses"),
+  caption = "Will use tools or resources after the workshop"
+)
+```
+
+
+
+# Open source
+
+This report was written in Rmarkdown and uses the open-source [Tufte](https://rstudio.github.io/tufte/) style. It has been published on 
+[Github pages](https://orchid00.github.io/ElixirBE/reports/2018March.html). To 
+see the Rmarkdown source of this document, you may follow this [link to github](https://github.com/orchid00/ElixirBE/reporst/blob/master/2018March.Rmd). 
+
+This report is freely available under [MIT License License](https://github.com/orchid00/ElixirBE/blob/master/LICENSE.md). You may re-use and adapt
+the material in any way you wish, without asking permission, **provided you cite the original source**. That is a [link back to this report](https://orchid00.github.io/ElixirBE/reports/2018March.html).
+
+I acknowledge this publication is resulting from support of [Elixir-Belgium](https://www.elixir-belgium.org/) for my role as data science 
+and bioinformatics trainer. 
+
+Last update: `r Sys.Date()`
+
+
