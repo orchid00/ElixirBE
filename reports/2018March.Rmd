@@ -239,9 +239,9 @@ knitr::kable(
 
 # Open source
 
-This report was written in Rmarkdown and uses the open-source [Tufte](https://rstudio.github.io/tufte/) style. It has been published on 
-[Github pages](https://orchid00.github.io/ElixirBE/reports/2018March.html). To 
-see the Rmarkdown source of this document, you may follow this [link to github](https://github.com/orchid00/ElixirBE/reporst/blob/master/2018March.Rmd). 
+This report was written in Rmarkdown and uses the open-source [Tufte](https://rstudio.github.io/tufte/) style. It has been published using 
+Github pages. To see the Rmarkdown source of this document, you may follow this
+[link to github](https://github.com/orchid00/ElixirBE/blob/master/reports/2018March.Rmd). 
 
 This report is freely available under [MIT License License](https://github.com/orchid00/ElixirBE/blob/master/LICENSE.md). You may re-use and adapt
 the material in any way you wish, without asking permission, **provided you cite the original source**. That is a [link back to this report](https://orchid00.github.io/ElixirBE/reports/2018March.html).
