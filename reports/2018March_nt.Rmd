@@ -1,9 +1,11 @@
 ---
 title: "Elixir Belgium workshop feedback"
-subtitle: "January 2018 - March 2018"
 author: "Paula Andrea Martinez"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
+subtitle: January 2018 - March 2018
 ---
 
 ```{r setup, include=FALSE}
@@ -237,10 +239,11 @@ knitr::kable(
 This report was written in Rmarkdown and uses the open-source a default style. 
 It has been published using 
 Github pages. To see the Rmarkdown source of this document, you may follow this
-[link to github](https://github.com/orchid00/ElixirBE/blob/master/reports/2018March.Rmd). 
+[link to github](https://github.com/orchid00/ElixirBE/blob/master/reports/2018March_nt.Rmd).
+This report is also available as [PDF](https://github.com/orchid00/ElixirBE/blob/master/reports/2018March_nt.pdf)
 
 This report is freely available under [MIT License License](https://github.com/orchid00/ElixirBE/blob/master/LICENSE.md). You may re-use and adapt
-the material in any way you wish, without asking permission, **provided you cite the original source**. That is a [link back to this report](https://orchid00.github.io/ElixirBE/reports/2018March.html).
+the material in any way you wish, without asking permission, **provided you cite the original source**. That is a [link back to this report](https://orchid00.github.io/ElixirBE/reports/2018March_nt).
 
 I acknowledge this publication is resulting from support of [Elixir-Belgium](https://www.elixir-belgium.org/) for my role as data science 
 and bioinformatics trainer. 
